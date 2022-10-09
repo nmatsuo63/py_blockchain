@@ -83,6 +83,7 @@ class Transaction(object):
         self.value = value
 
     def generate_signature(self):
+        # トランザクションを生成
         sha256 = hashlib.sha256()
         transaction = utils.sorted_dict_by_key(
             {
@@ -91,22 +92,50 @@ class Transaction(object):
                 "value": float(self.value),
             }
         )
+        # トランザクションをUTF-8に変換
         sha256.update(str(transaction).encode("utf-8"))
+        # メッセージを生成
         message = sha256.digest()
+        # 公開鍵に適合する秘密鍵を取り出す
         private_key = SigningKey.from_string(
             bytes().fromhex(self.sender_private_key), curve=NIST256p
         )
+        # 秘密鍵に署名する
         private_key_sign = private_key.sign(message)
+        # 署名を16進数に変換
         signature = private_key_sign.hex()
         return signature
 
 
 if __name__ == "__main__":
-    wallet = Wallet()
-    print('privatekey: ', wallet.private_key)
-    print('publickey: ', wallet.public_key)
-    print('address: ', wallet.blockchain_address)
+    wallet_Miner = Wallet()
+    wallet_A = Wallet()
+    wallet_B = Wallet()
+
     t = Transaction(
-        wallet.private_key, wallet.public_key, wallet.blockchain_address, "B", 1.0
+        wallet_A.private_key,
+        wallet_A.public_key,
+        wallet_A.blockchain_address,
+        wallet_B.blockchain_address,
+        1.0,
     )
-    print('signature: ', t.generate_signature())
+
+    ############ Blockchain Node #############
+    import blockchain
+
+    block_chain = blockchain.BlockChain(
+        blockchain_address=wallet_Miner.blockchain_address
+    )
+    is_added = block_chain.add_transaction(
+        wallet_A.blockchain_address,
+        wallet_B.blockchain_address,
+        1.0,
+        wallet_A.public_key,
+        t.generate_signature(),
+    )
+    print("Added?", is_added)
+    block_chain.mining()
+    utils.pprint(block_chain.chain)
+
+    print('A', block_chain.calculate_total_amount(wallet_A.blockchain_address))
+    print('B', block_chain.calculate_total_amount(wallet_B.blockchain_address))
