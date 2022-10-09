@@ -7,16 +7,20 @@ import time
 
 import utils
 
-MINNING_DIFFICULTY = 3
+MINING_DIFFICULTY = 3#何桁目までをゼロにするか
+MINING_SENDER = 'THE BLOCKCHAIN'#マイニング報酬の贈り元アドレス
+MINING_REWART = 1.0#マイニング報酬
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger(__name__)
 
 class BlockChain(object):
 
-    def __init__(self):
+    def __init__(self, blockchain_address=None):
         self.transaction_pool = []
         self.chain = []
         self.create_block(0, self.hash({}))
+        self.blockchain_address = blockchain_address
 
     def create_block(self, nonce, previous_hash):
         block = utils.sorted_dict_by_key({
@@ -44,7 +48,7 @@ class BlockChain(object):
         return True
 
     def valid_proof(self, transactions, previous_hash, nonce, 
-                    difficulty=MINNING_DIFFICULTY):
+                    difficulty=MINING_DIFFICULTY):
         guess_block = utils.sorted_dict_by_key({
             'transactions': transactions,
             'nonce': nonce,
@@ -66,23 +70,29 @@ class BlockChain(object):
             nonce += 1
         return nonce
 
+    def mining(self):
+        self.add_transaction(
+            sender_blockchain_address=MINING_SENDER,
+            recipient_blockchain_address=self.blockchain_address,
+            value=MINING_REWART
+        )
+        nonce = self.proof_of_work()
+        previous_hash = self.hash(self.chain[-1])
+        self.create_block(nonce, previous_hash)
+        logger.info({'action': 'mining', 'status': 'success'})
+        return True
+
 if __name__ == '__main__':
-    print('add first block')
-    block_chain = BlockChain()
+    my_blockchain_address = '__my_blockchain_address__'#マイナーのアドレス
+    block_chain = BlockChain(blockchain_address=my_blockchain_address)
     utils.pprint(block_chain.chain)
 
-    block_chain.add_transaction('A', 'B', 1.0)
-    previous_hash = block_chain.hash(block_chain.chain[-1])
-    nonce = block_chain.proof_of_work()
-    block_chain.create_block(nonce, previous_hash)
+    block_chain.add_transaction('A', 'B', 1.0)#AさんからBさんへ1.0BTC送る
+    block_chain.mining()
     utils.pprint(block_chain.chain)
 
     block_chain.add_transaction('C', 'D', 2.0)
     block_chain.add_transaction('X', 'Y', 3.0)
-    previous_hash = block_chain.hash(block_chain.chain[-1])
-    nonce = block_chain.proof_of_work()
-    block_chain.create_block(nonce, previous_hash)
+    block_chain.mining()
     utils.pprint(block_chain.chain)
 
-# logging.info('test')
-# print('test2')
