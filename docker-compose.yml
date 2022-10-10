@@ -1,0 +1,48 @@
+version: "3"
+services:
+  wallet:
+    build: ./webapp
+    ports:
+      - "8082:8081"
+    container_name: wallet
+    volumes:
+    #   - ./app:/app
+    #   - ./app/*:/app/*
+    #   # - ./app/wallet_server.py:/app/wallet_server.py
+      - ./common:/app/common
+    #   # - ./app/templates:/app/templates
+    working_dir: "/app"
+    command: python wallet_server.py
+    # command: ls -la
+    stdin_open: true
+  
+  blockchain:
+    build: ./blockchain
+    ports:
+      - "5200:5100"
+    container_name: node1
+    volumes:
+      - ./common:/app/common
+    working_dir: "/app"
+    command: python blockchain_server.py
+    stdin_open: true
+  
+  # blockchain2:
+  #   # build: ./blockchain
+  #   image: blockchain
+  #   ports:
+  #     - "5201:5101"
+  #   container_name: node2
+  #   volumes:
+  #     - ./common:/app/common
+  #   # command: python blockchain_server.py
+  
+  # blockchain3:
+  #   # build: ./blockchain
+  #   image: blockchain
+  #   ports:
+  #     - "5202:5102"
+  #   container_name: node3
+  #   volumes:
+  #     - ./common:/app/common
+  #   # command: python blockchain_server.py
