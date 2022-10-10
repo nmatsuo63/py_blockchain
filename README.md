@@ -4,6 +4,9 @@ Python › Analysis: Extra Paths
 において下記を追加  
 /usr/local/lib/python3.10/site-packages/
 
+## docker
+Docker Compose化してどこでも動かせるようにしたい
+
 ## blockchain
 - Blockchainクラス
   - create_block

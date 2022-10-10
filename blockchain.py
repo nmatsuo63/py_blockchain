@@ -84,6 +84,27 @@ class BlockChain(object):
             return True
         return False
 
+    def create_transaction(
+        self,
+        sender_blockchain_address,
+        recipient_blockchain_address,
+        value,
+        sender_public_key,
+        signature,
+    ):
+        is_transacted = self.add_transaction(
+            sender_blockchain_address,
+            recipient_blockchain_address,
+            value,
+            sender_public_key,
+            signature,
+        )
+
+        # TODO
+        # Sync 127.0.0.1:5001
+        
+        return is_transacted
+
     def verify_transaction_signature(self, sender_public_key, signature, transaction):
         # トランザクションをダイジェスト
         sha256 = hashlib.sha256()
