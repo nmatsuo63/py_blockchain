@@ -1,10 +1,12 @@
 # Python標準ライブラリ
+import contextlib
 import hashlib
 import json
 import enum
 import logging
 import sys
 import time
+import threading
 
 # 外部ライブラリ
 from ecdsa import NIST256p
@@ -16,6 +18,7 @@ import utils
 MINING_DIFFICULTY = 3  # 何桁目までをゼロにするか
 MINING_SENDER = "THE BLOCKCHAIN"  # マイニング報酬の贈り元アドレス
 MINING_REWARD = 1.0  # マイニング報酬
+MINING_TIMER_SEC = 20
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -28,6 +31,8 @@ class BlockChain(object):
         self.create_block(0, self.hash({}))
         self.blockchain_address = blockchain_address
         self.port = port
+        # Semaphore：並列処理を1つ実行させる
+        self.mining_semaphore = threading.Semaphore(1)
 
     def create_block(self, nonce, previous_hash):
         # 引数をまとめてブロックを作成
@@ -151,6 +156,11 @@ class BlockChain(object):
         return nonce
 
     def mining(self):
+        # ビットコインではトランザクションがなくてもマイニングが実行される（実際はトランザクションがないということがない）
+        # 今回はマイニングAPIの動きを確認するため、トランザクションがないとマイニングが実行されないとしておく
+        if not self.transaction_pool:
+            return False
+
         # トランザクションの生成
         self.add_transaction(
             sender_blockchain_address=MINING_SENDER,
@@ -166,6 +176,16 @@ class BlockChain(object):
         # マイニングの結果をログ出力
         logger.info({"action": "mining", "status": "success"})
         return True
+
+    def start_mining(self):
+        # 待ち状態（＝blockingされる状態）にならずに取得する
+        is_acquire = self.mining_semaphore.acquire(blocking=False)
+        if is_acquire:
+            with contextlib.ExitStack() as stack:
+                # 詳細はpython入門講座で解説↓
+                stack.callback(self.mining_semaphore.release)
+                self.mining() # ブロックチェーンだと約10minで設定されているが、今回は20秒
+                loop = threading.Timer(MINING_TIMER_SEC, self.start_mining)
 
     def calculate_total_amount(self, blockchain_address):
         # あるアドレスのBTC総量を計算

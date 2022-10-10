@@ -73,9 +73,13 @@ def mine():
     block_chain = get_blockchain()
     is_mined = block_chain.mining()
     if is_mined:
-        return jsonify({'message': 'success'}), 200
+        return jsonify({'message': 'success(mining success)'}), 200
     return jsonify({'message': 'fail'}), 400
 
+@app.route('/mine/start', methods=['GET'])
+def start_mine():
+    get_blockchain().start_mining()
+    return jsonify({'message': 'success(mining started)'}), 200
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
