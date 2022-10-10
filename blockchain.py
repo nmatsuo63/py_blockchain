@@ -15,7 +15,7 @@ import utils
 
 MINING_DIFFICULTY = 3  # 何桁目までをゼロにするか
 MINING_SENDER = "THE BLOCKCHAIN"  # マイニング報酬の贈り元アドレス
-MINING_REWART = 1.0  # マイニング報酬
+MINING_REWARD = 1.0  # マイニング報酬
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class BlockChain(object):
 
         # TODO
         # Sync 127.0.0.1:5001
-        
+
         return is_transacted
 
     def verify_transaction_signature(self, sender_public_key, signature, transaction):
@@ -131,11 +131,12 @@ class BlockChain(object):
             }
         )
         guess_hash = self.hash(guess_block)
-        # ハッシュ値の冒頭の0がdifficulty個連続しているか確認
-        is_proved = guess_hash[:difficulty] == "0" * difficulty
-        if is_proved:
-            print("proved_hash:", guess_hash)
-        return is_proved
+        return guess_hash[:difficulty] == "0" * difficulty
+        # # ハッシュ値の冒頭の0がdifficulty個連続しているか確認
+        # is_proved = guess_hash[:difficulty] == "0" * difficulty
+        # if is_proved:
+        #     print("proved_hash:", guess_hash)
+        # return is_proved
 
     def proof_of_work(self):
         # トランザクションと前ブロックのハッシュ値を取得
@@ -154,7 +155,7 @@ class BlockChain(object):
         self.add_transaction(
             sender_blockchain_address=MINING_SENDER,
             recipient_blockchain_address=self.blockchain_address,
-            value=MINING_REWART,
+            value=MINING_REWARD,
         )
         # ナンスの生成（Proof of Workの結果）
         nonce = self.proof_of_work()

@@ -13,7 +13,7 @@ class Wallet(object):
     def __init__(self):
         self._private_key = SigningKey.generate(curve=NIST256p)
         # 1. Creating a public key with ECDSA
-        self._public_key = self._private_key.get_verifying_key()
+        self._publick_key = self._private_key.get_verifying_key()
         self._blockchain_address = self.generate_blockchain_address()
 
     @property
@@ -22,7 +22,7 @@ class Wallet(object):
 
     @property
     def public_key(self):
-        return self._public_key.to_string().hex()
+        return self._publick_key.to_string().hex()
 
     @property
     def blockchain_address(self):
@@ -30,21 +30,21 @@ class Wallet(object):
 
     def generate_blockchain_address(self):
         # 2. SHA-256 for the public key
-        public_key_bytes = self._public_key.to_string()
+        public_key_bytes = self._publick_key.to_string()
         sha256_bpk = hashlib.sha256(public_key_bytes)  # bite public key
         sha256_bpk_digest = sha256_bpk.digest()
 
         # 3. Ripemd160 for the SHA-256
-        ripemed160_bpk = hashlib.new("ripemd160")
-        ripemed160_bpk.update(sha256_bpk_digest)
-        ripemed160_bpk_digest = ripemed160_bpk.digest()
-        ripemed160_bpk_hex = codecs.encode(ripemed160_bpk_digest, "hex")
+        ripemd160_bpk = hashlib.new("ripemd160")
+        ripemd160_bpk.update(sha256_bpk_digest)
+        ripemd160_bpk_digest = ripemd160_bpk.digest()
+        ripemd160_bpk_hex = codecs.encode(ripemd160_bpk_digest, "hex")
 
         # 4. Add network byte
-        network_byte = b"00"  # メインネットの場合は00とする
-        network_bitcoin_public_key = network_byte + ripemed160_bpk_hex
+        networ_byte = b"00"  # メインネットの場合は00とする
+        network_bitcoin_public_key = networ_byte + ripemd160_bpk_hex
         network_bitcoin_public_key_bytes = codecs.decode(
-            network_bitcoin_public_key, "hex"
+            network_bitcoin_public_key, ("hex")
         )
 
         # 5. Double SHA-256
@@ -137,5 +137,5 @@ if __name__ == "__main__":
     block_chain.mining()
     utils.pprint(block_chain.chain)
 
-    print("A", block_chain.calculate_total_amount(wallet_A.blockchain_address))
-    print("B", block_chain.calculate_total_amount(wallet_B.blockchain_address))
+    print('A', block_chain.calculate_total_amount(wallet_A.blockchain_address))
+    print('B', block_chain.calculate_total_amount(wallet_B.blockchain_address))

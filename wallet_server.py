@@ -10,65 +10,74 @@ import wallet
 
 app = Flask(__name__, template_folder="./templates")
 
-@app.route("/")#このパスに来たら
-def index():#この関数を実行する
-    return render_template("./index.html")#index.htmlをレンダリングする
 
-@app.route("/wallet", methods=['POST'])
+@app.route("/")  # このパスに来たら
+def index():  # この関数を実行する
+    return render_template("./index.html")  # index.htmlをレンダリングする
+
+
+@app.route("/wallet", methods=["POST"])
 def create_wallet():
-    my_wallet = wallet.Wallet()#ウォレットを生成する
+    my_wallet = wallet.Wallet()  # ウォレットを生成する
     response = {
-        'private_key': my_wallet.private_key,
-        'public_key': my_wallet.public_key,
-        'blockchain_address': my_wallet.blockchain_address,
+        "private_key": my_wallet.private_key,
+        "public_key": my_wallet.public_key,
+        "blockchain_address": my_wallet.blockchain_address,
     }
     return jsonify(response), 200
 
 
-@app.route('/transaction', methods=['POST'])#transactionパス宛にPOSTリクエストが来たら
-def create_transaction():#本関数を実行する（transactionを作成する）
+@app.route("/transaction", methods=["POST"])  # transactionパス宛にPOSTリクエストが来たら
+def create_transaction():  # 本関数を実行する（transactionを作成する）
     request_json = request.json
-    required = {
-        'sender_private_key',
-        'sender_blockchain_address',
-        'recipient_blockchain_address',
-        'sender_public_key',
-        'value',
-    }
+    required = (
+        "sender_private_key",
+        "sender_blockchain_address",
+        "recipient_blockchain_address",
+        "sender_public_key",
+        "value",
+    )
     if not all(k in request_json for k in required):
-        return 'missing values', 400
+        return "missing values", 400
 
-    sender_private_key = request_json['sender_private_key']
-    sender_blockchain_address = request_json['sender_blockchain_address']
-    recipient_blockchain_address = request_json['recipient_blockchain_address']
-    sender_public_key = request_json['sender_public_key']
-    value = float(request_json['value'])
+    sender_private_key = request_json["sender_private_key"]
+    sender_blockchain_address = request_json["sender_blockchain_address"]
+    recipient_blockchain_address = request_json["recipient_blockchain_address"]
+    sender_public_key = request_json["sender_public_key"]
+    value = float(request_json["value"])
 
     transaction = wallet.Transaction(
         sender_private_key,
         sender_public_key,
         sender_blockchain_address,
         recipient_blockchain_address,
-        value
+        value,
     )
 
     json_data = {
-        'sender_blockchain_address': sender_blockchain_address,
-        'recipient_blockchain_address': recipient_blockchain_address,
-        'sender_public_key': sender_public_key,
-        'value': value,
-        'signature': transaction.generate_signature(),
+        "sender_blockchain_address": sender_blockchain_address,
+        "recipient_blockchain_address": recipient_blockchain_address,
+        "sender_public_key": sender_public_key,
+        "value": value,
+        "signature": transaction.generate_signature(),
     }
 
+    print("*********")
+    print("Debug:", app.config["gw"])
+    print("*********")
+    print("json_data", json_data)
+    print("*********")
     response = requests.post(
-        urllib.parse.urljoin(app.config['gw'], 'transactions'),
-        json=json_data, timeout=3
+        urllib.parse.urljoin(app.config["gw"], "transactions"),
+        json=json_data,
+        timeout=3,
     )
 
     if response.status_code == 201:
-        return jsonify({'message': 'success'}), 201
-    return jsonify({'message': 'fail', 'response': response}), 400
- 
+        return jsonify({"message": "success"}), 201
+    return jsonify({"message": "fail", "response": response}), 400
+
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
@@ -85,5 +94,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     port = args.port
-    app.config['gw'] = args._get_kwargs
-    app.run(host='0.0.0.0', port=port, threaded=True, debug=True)
+    app.config["gw"] = args.gw
+    app.run(host="0.0.0.0", port=port, threaded=True, debug=True)
