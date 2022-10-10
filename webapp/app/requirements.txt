@@ -1,4 +1,0 @@
-base58
-ecdsa
-Flask
-requests
