@@ -1,6 +1,10 @@
+import urllib.parse
+import requests
+
 from flask import Flask
 from flask import jsonify
 from flask import render_template
+from flask import request
 
 import wallet
 
@@ -20,6 +24,51 @@ def create_wallet():
     }
     return jsonify(response), 200
 
+
+@app.route('/transaction', methods=['POST'])#transactionパス宛にPOSTリクエストが来たら
+def create_transaction():#本関数を実行する（transactionを作成する）
+    request_json = request.json
+    required = {
+        'sender_private_key',
+        'sender_blockchain_address',
+        'recipient_blockchain_address',
+        'sender_public_key',
+        'value',
+    }
+    if not all(k in request_json for k in required):
+        return 'missing values', 400
+
+    sender_private_key = request_json['sender_private_key']
+    sender_blockchain_address = request_json['sender_blockchain_address']
+    recipient_blockchain_address = request_json['recipient_blockchain_address']
+    sender_public_key = request_json['sender_public_key']
+    value = float(request_json['value'])
+
+    transaction = wallet.Transaction(
+        sender_private_key,
+        sender_public_key,
+        sender_blockchain_address,
+        recipient_blockchain_address,
+        value
+    )
+
+    json_data = {
+        'sender_blockchain_address': sender_blockchain_address,
+        'recipient_blockchain_address': recipient_blockchain_address,
+        'sender_public_key': sender_public_key,
+        'value': value,
+        'signature': transaction.generate_signature(),
+    }
+
+    response = requests.post(
+        urllib.parse.urljoin(app.config['gw'], 'transactions'),
+        json=json_data, timeout=3
+    )
+
+    if response.status_code == 201:
+        return jsonify({'message': 'success'}), 201
+    return jsonify({'message': 'fail', 'response': response}), 400
+ 
 if __name__ == "__main__":
     from argparse import ArgumentParser
 

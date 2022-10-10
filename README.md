@@ -29,3 +29,4 @@ Docker Compose化してどこでも動かせるようにしたい
 
 ## blockchain_server.py
 ポート番号は5100、5101、5102とする  
+
